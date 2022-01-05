@@ -20,7 +20,6 @@ provider "azurerm" {
 
 
 
-
 #########################
 ## MAIN RESOURCE GROUP ##
 #########################
@@ -29,6 +28,7 @@ resource "azurerm_resource_group" "rgmain" {
   name     = "${var.prefix.rg}${var.resource.rg.main.name}"
   location = "${var.resource.rg.main.location}"
 }
+
 
 
 ################################
@@ -40,6 +40,7 @@ resource "azurerm_resource_group" "rgX" {
   name     = "rg-haunui-${count.index}"
   location = "West Europe"
 }
+
 
 
 ##################
@@ -56,6 +57,7 @@ resource "azurerm_storage_account" "stmain" {
 }
 
 
+
 ################################
 ## MAIN STORAGE NETWORK RULES ##
 ################################
@@ -65,10 +67,11 @@ resource "azurerm_storage_account_network_rules" "stmainnetworkrules" {
   storage_account_name       = azurerm_storage_account.stmain.name
 
   bypass                     = var.resource.storage.main.network_acls.bypass
-  default_action              = var.resource.storage.main.network_acls.default_action
+  default_action             = var.resource.storage.main.network_acls.default_action
   ip_rules                   = var.resource.storage.main.network_acls.ip_rules
   virtual_network_subnet_ids = [azurerm_subnet.subnet0X["01"].id]
 }
+
 
 
 ###################
@@ -143,6 +146,7 @@ resource "azurerm_key_vault" "kvmain" {
 }
 
 
+
 ##################
 ## MSSQL SERVER ##
 ##################
@@ -159,6 +163,7 @@ resource "azurerm_mssql_server" "mssqlmain" {
 
   tags = var.resource.mssql.main.tags
 }
+
 
 
 ####################
@@ -180,7 +185,6 @@ resource "azurerm_mssql_server" "mssqlmain" {
 
 
 
-
 ################################
 ## RANDOM PASSWORD GENERATION ##
 ################################
@@ -196,6 +200,7 @@ resource "random_password" "mssqladminpassword" {
 }
 
 
+
 ###########################
 ## STORE RANDOM PASSWORD ##
 ###########################
@@ -205,6 +210,7 @@ resource "azurerm_key_vault_secret" "mssqladminsecret" {
   value        = random_password.mssqladminpassword.result
   key_vault_id = azurerm_key_vault.kvmain.id
 }
+
 
 
 #############################
@@ -220,6 +226,7 @@ resource "azurerm_log_analytics_workspace" "logmain" {
 }
 
 
+
 ################################
 ## MONITOR DIAGNOSTIC SETTING ##
 ################################
@@ -228,7 +235,6 @@ resource "azurerm_monitor_diagnostic_setting" "diagmain" {
   name                       = "${var.prefix.diag}${var.resource.diag.main.name}"
   target_resource_id         = azurerm_key_vault.kvmain.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.logmain.id
-
 
   log {
     category = "${var.resource.diag.main.log[0].category}"
@@ -271,6 +277,7 @@ resource "azurerm_virtual_network" "vnetmain" {
 }
 
 
+
 #################
 ## SUB NETWORK ##
 #################
@@ -288,20 +295,21 @@ resource "azurerm_subnet" "subnet0X" {
 }
 
 
+
 ##############
 ## ENDPOINT ##
 ##############
 
 resource "azurerm_private_endpoint" "netadaptermain" {
-  name = "${var.prefix.netadapter}${var.resource.netadapter.main.name}"
-  location = azurerm_resource_group.rgmain.location
+  name                = "${var.prefix.netadapter}${var.resource.netadapter.main.name}"
+  location            = azurerm_resource_group.rgmain.location
   resource_group_name = azurerm_resource_group.rgmain.name
-  subnet_id = azurerm_subnet.subnet0X["01"].id
+  subnet_id           = azurerm_subnet.subnet0X["01"].id
 
   private_service_connection {
-    name = "${var.prefix.netadapter}${var.resource.netadapter.main.name}adapter"
-    private_connection_resource_id = azurerm_key_vault.kvmain.id
-    subresource_names = var.resource.netadapter.main.private_service_connection.subresource_names
-    is_manual_connection = var.resource.netadapter.main.private_service_connection.is_manual_connection
+    name                            = "${var.prefix.netadapter}${var.resource.netadapter.main.name}adapter"
+    private_connection_resource_id  = azurerm_key_vault.kvmain.id
+    subresource_names               = var.resource.netadapter.main.private_service_connection.subresource_names
+    is_manual_connection            = var.resource.netadapter.main.private_service_connection.is_manual_connection
   } 
 }
