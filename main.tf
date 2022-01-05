@@ -27,13 +27,24 @@ resource "azurerm_resource_group" "rgX" {
 }
 
 resource "azurerm_storage_account" "stmain" {
-name                     = "${var.prefix["storage"]}${var.resource["storage"]["main"]["name"]}"
-resource_group_name      = azurerm_resource_group.rgmain.name
-location                 = azurerm_resource_group.rgmain.location
-account_tier             = "${var.resource["storage"]["main"]["account_tier"]}"
-account_replication_type = "${var.resource["storage"]["main"]["account_replication_type"]}"
-access_tier              = "${var.resource["storage"]["main"]["access_tier"]}"
+  name                     = "${var.prefix["storage"]}${var.resource["storage"]["main"]["name"]}"
+  resource_group_name      = azurerm_resource_group.rgmain.name
+  location                 = azurerm_resource_group.rgmain.location
+  account_tier             = "${var.resource["storage"]["main"]["account_tier"]}"
+  account_replication_type = "${var.resource["storage"]["main"]["account_replication_type"]}"
+  access_tier              = "${var.resource["storage"]["main"]["access_tier"]}"
 }
+
+resource "azurerm_storage_account_network_rules" "stmainnetworkrules" {
+  resource_group_name        = azurerm_resource_group.rgmain.name
+  storage_account_name       = azurerm_storage_account.stmain.name
+
+  bypass                     = var.resource["storage"]["main"]["network_acls"]["bypass"]
+  default_action              = var.resource["storage"]["main"]["network_acls"]["default_action"]
+  ip_rules                   = var.resource["storage"]["main"]["network_acls"]["ip_rules"]
+  virtual_network_subnet_ids = [azurerm_subnet.subnet0X["01"].id]
+}
+
 
 resource "azurerm_storage_account" "stmssql" {
   name                     = "${var.prefix["storage"]}${var.resource["storage"]["mssql"]["name"]}"

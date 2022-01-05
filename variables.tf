@@ -46,6 +46,12 @@ variable "resource" {
                 account_tier = "Standard"
                 account_replication_type = "LRS"
                 access_tier =  "Cool"
+
+                network_acls = {
+                    bypass = ["AzureServices"]
+                    default_action = "Deny"
+                    ip_rules = ["78.118.201.29"]
+                }
             }
             
             mssql = {
