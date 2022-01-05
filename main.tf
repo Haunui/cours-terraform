@@ -1,3 +1,7 @@
+#######################
+## DECLARE PROVIDERS ##
+#######################
+
 terraform {
   required_providers {
     azurerm = {
@@ -15,16 +19,32 @@ provider "azurerm" {
 }
 
 
+
+
+#########################
+## MAIN RESOURCE GROUP ##
+#########################
+
 resource "azurerm_resource_group" "rgmain" {
   name     = "${var.prefix.rg}${var.resource.rg.main.name}"
   location = "${var.resource.rg.main.location}"
 }
+
+
+################################
+## RESOURCE GROUPS WITH COUNT ##
+################################
 
 resource "azurerm_resource_group" "rgX" {
   count = 4
   name     = "rg-haunui-${count.index}"
   location = "West Europe"
 }
+
+
+##################
+## MAIN STORAGE ##
+##################
 
 resource "azurerm_storage_account" "stmain" {
   name                     = "${var.prefix.storage}${var.resource.storage.main.name}"
@@ -34,6 +54,11 @@ resource "azurerm_storage_account" "stmain" {
   account_replication_type = "${var.resource.storage.main.account_replication_type}"
   access_tier              = "${var.resource.storage.main.access_tier}"
 }
+
+
+################################
+## MAIN STORAGE NETWORK RULES ##
+################################
 
 resource "azurerm_storage_account_network_rules" "stmainnetworkrules" {
   resource_group_name        = azurerm_resource_group.rgmain.name
@@ -46,6 +71,10 @@ resource "azurerm_storage_account_network_rules" "stmainnetworkrules" {
 }
 
 
+###################
+## MSSQL STORAGE ##
+###################
+
 resource "azurerm_storage_account" "stmssql" {
   name                     = "${var.prefix.storage}${var.resource.storage.mssql.name}"
   resource_group_name      = azurerm_resource_group.rgmain.name
@@ -57,6 +86,9 @@ resource "azurerm_storage_account" "stmssql" {
 
 
 
+####################
+## MAIN CONTAINER ##
+####################
 
 resource "azurerm_storage_container" "contmain" {
   name                  = "${var.prefix.container}${var.resource.container.main.name}"
@@ -66,12 +98,21 @@ resource "azurerm_storage_container" "contmain" {
 
 
 
+#######################
+## RAPHAEL CONTAINER ##
+#######################
 
 # resource "azurerm_storage_container" "cont-raphael" {
 #   name                  = "${var.prefix.container}${var.resource.container.raphael.name}"
 #   storage_account_name  = data.azurerm_storage_account.straphael.name
 #   container_access_type = "${var.resource.container.raphael.container_access_type}"
 # }
+
+
+
+###############
+## KEY VAULT ##
+###############
 
 resource "azurerm_key_vault" "kvmain" {
   name                        = "${var.prefix.keyvault}${var.resource.keyvault.main.name}"
@@ -102,6 +143,9 @@ resource "azurerm_key_vault" "kvmain" {
 }
 
 
+##################
+## MSSQL SERVER ##
+##################
 
 resource "azurerm_mssql_server" "mssqlmain" {
   name                = "${var.prefix.mssql}${var.resource.mssqladmin.secret.name}"
@@ -115,6 +159,11 @@ resource "azurerm_mssql_server" "mssqlmain" {
 
   tags = var.resource.mssql.main.tags
 }
+
+
+####################
+## MSSQL DATABASE ##
+####################
 
 # resource "azurerm_mssql_database" "mssqldbmain" {
 #   name                            = "${var.prefix.mssqldb}${var.resource.mssqldb.main.name}"
@@ -132,7 +181,9 @@ resource "azurerm_mssql_server" "mssqlmain" {
 
 
 
-
+################################
+## RANDOM PASSWORD GENERATION ##
+################################
 
 resource "random_password" "mssqladminpassword" {
   length           = var.resource.mssqladmin.password.length
@@ -145,6 +196,10 @@ resource "random_password" "mssqladminpassword" {
 }
 
 
+###########################
+## STORE RANDOM PASSWORD ##
+###########################
+
 resource "azurerm_key_vault_secret" "mssqladminsecret" {
   name         = "${var.resource.mssqladmin.secret.name}"
   value        = random_password.mssqladminpassword.result
@@ -152,7 +207,9 @@ resource "azurerm_key_vault_secret" "mssqladminsecret" {
 }
 
 
-
+#############################
+## LOG ANALYTICS WORKSPACE ##
+#############################
 
 resource "azurerm_log_analytics_workspace" "logmain" {
   name                = "${var.prefix.log}${var.resource.log.main.name}"
@@ -161,6 +218,11 @@ resource "azurerm_log_analytics_workspace" "logmain" {
   sku                 = "${var.resource.log.main.sku}"
   retention_in_days   = var.resource.log.main.retention_in_days
 }
+
+
+################################
+## MONITOR DIAGNOSTIC SETTING ##
+################################
 
 resource "azurerm_monitor_diagnostic_setting" "diagmain" {
   name                       = "${var.prefix.diag}${var.resource.diag.main.name}"
@@ -196,12 +258,22 @@ resource "azurerm_monitor_diagnostic_setting" "diagmain" {
 }
 
 
+
+#####################
+## VIRTUAL NETWORK ##
+#####################
+
 resource "azurerm_virtual_network" "vnetmain" {
   name                = "${var.prefix.vnet}${var.resource.vnet.main.name}"
   address_space       = ["${var.resource.vnet.main.address}"]
   location            = azurerm_resource_group.rgmain.location
   resource_group_name = azurerm_resource_group.rgmain.name
 }
+
+
+#################
+## SUB NETWORK ##
+#################
 
 resource "azurerm_subnet" "subnet0X" {
   for_each             = var.resource.vnet.main.subnet
@@ -215,6 +287,10 @@ resource "azurerm_subnet" "subnet0X" {
   service_endpoints = ["Microsoft.KeyVault","Microsoft.Storage"]
 }
 
+
+##############
+## ENDPOINT ##
+##############
 
 resource "azurerm_private_endpoint" "netadaptermain" {
   name = "${var.prefix.netadapter}${var.resource.netadapter.main.name}"

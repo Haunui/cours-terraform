@@ -1,3 +1,4 @@
+# PREFIX
 variable "prefix" {
     type = map
     default = {
@@ -16,7 +17,7 @@ variable "prefix" {
 }
 
 
-
+# DATA
 variable "data" {
     type = map
     default = {
@@ -28,7 +29,7 @@ variable "data" {
 }
 
 
-
+# RESOURCE
 variable "resource" {
     type = any
     default = {
