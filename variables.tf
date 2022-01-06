@@ -34,6 +34,42 @@ variable "data" {
                 resource_group_name = "rg-raphael"
             }
         }
+
+        stsas = {
+            main = {
+                st = "main"
+
+            https_only = true
+            signed_version = "2022-01-06"
+
+            resource_types = {
+                service = true
+                container = true
+                object = true
+            }
+
+            services = {
+                blob = true
+                queue = false
+                table = false
+                file = false
+            }
+
+            start = "2022-01-06T00:00:00Z"
+            expiry = "2022-01-10T00:00:00Z"
+
+            permissions = {
+                read = true
+                write = true
+                delete = true
+                list = true
+                add = true
+                create = true
+                update = true
+                process = true
+            }
+            }
+        }
     }
 }
 
