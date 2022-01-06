@@ -24,7 +24,7 @@ data "azurerm_storage_account_sas" "saskey0" {
 
   connection_string = azurerm_storage_account.st0["${each.value.st}"].primary_connection_string
   https_only        = each.value.https_only
-  signed_version    = "${each.value.signed_version}"
+  #signed_version    = "${each.value.signed_version}"
 
   resource_types {
     service   = each.value.resource_types.service
