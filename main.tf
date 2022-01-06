@@ -378,3 +378,55 @@ resource "azurerm_virtual_machine" "vm0" {
 
   tags = each.value.tags
 }
+
+
+
+##########################
+## MONITOR ACTION GROUP ##
+##########################
+
+resource "azurerm_monitor_action_group" "monitorag0" {
+  for_each            = var.resource.monitor_action_group
+
+  name                = "${var.prefix.monitor_action_group}${each.value.name}${each.key}"
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  short_name          = "${each.value.short_name}"
+
+  email_receiver {
+    name          = "${each.value.email_receiver[0].name}"
+    email_address = "${each.value.email_receiver[0].email_address}"
+  }
+
+  email_receiver {
+    name          = "${each.value.email_receiver[1].name}"
+    email_address = "${each.value.email_receiver[1].email_address}"
+  }
+}
+
+
+
+##########################
+## MONITOR METRIC ALERT ## 
+##########################
+
+resource "azurerm_monitor_metric_alert" "alert" {
+  for_each = var.resource.monitor_metric_alert
+
+  name = "${var.prefix.monitor_metric_alert}${each.key}"
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  scopes = [azurerm_virtual_machine.vm0["${each.value.vm}"].id]
+  description = "${each.value.description}"
+  target_resource_type = "${each.value.target_resource_type}"
+
+  criteria {
+    metric_namespace = "${each.value.criteria.metric_namespace}"
+    metric_name = "${each.value.criteria.metric_name}"
+    aggregation = "${each.value.criteria.aggregation}"
+    operator = "${each.value.criteria.operator}"
+    threshold = each.value.criteria.threshold
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.monitorag0["${each.value.action_group}"].id
+  }
+}

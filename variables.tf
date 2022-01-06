@@ -16,6 +16,8 @@ variable "prefix" {
         vm = "vm"
         netint = "netint"
         pub_ip = "ip"
+        monitor_action_group = "ag"
+        monitor_metric_alert = "alert"
     }
 }
 
@@ -364,6 +366,41 @@ variable "resource" {
                 tags = {
                     environment = "staging"
                 }
+            }
+        }
+
+        monitor_action_group = {
+            critical0 = {
+                rg = "main"
+
+                name = "haunui"
+                short_name = "crit0"
+
+                email_receiver = [
+                    {
+                        name = "Haunui"
+                        email_address = "haunui@saint-sevin.fr"
+                    }
+                ]
+            }
+        }
+
+        monitor_metric_alert = {
+            vm0_cpu = {
+                rg = "main"
+                vm = "main"
+                description = "Alert when CPU usage is greater than 80%"
+                target_resource_type = "Microsoft.Compute/virtualMachines"
+
+                criteria = {
+                    metric_namespace = "Microsoft.Compute/virtualMachines"
+                    metric_name = "Percentage CPU"
+                    aggregation = "Total"
+                    operator = "GreaterThan"
+                    threshold = 80
+                }
+
+                action_group = "critical0"
             }
         }
     }
