@@ -59,6 +59,6 @@ data "azurerm_storage_account_sas" "saskey0" {
 
 # GET STORAGE ACCOUNT URL
 output "primary_connection_string" {
-  value = "https://${azurerm_storage_account.st0["main"].name}.blob.core.windows.net/${nonsensitive(data.azurerm_storage_account_sas.saskey0["main"].sas)}"
-  #sensitive = true
+  value = nonsensitive("https://${azurerm_storage_account.st0["main"].name}.blob.core.windows.net/${data.azurerm_storage_account_sas.saskey0["main"].sas}")
+  sensitive = false
 }
