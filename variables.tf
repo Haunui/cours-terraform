@@ -15,6 +15,7 @@ variable "prefix" {
         netadapter = "netadapter"
         vm = "vm"
         netint = "netint"
+        pub_ip = "ip"
     }
 }
 
@@ -141,6 +142,7 @@ variable "resource" {
         mssql = {
             main = {
                 rg = "main"
+                kv = "main"
 
                 name = "haunui"
                 version = "12.0"
@@ -167,18 +169,10 @@ variable "resource" {
             }
         }
 
-        mssqladmin = {
-            secret = {
-                name = "mssqladminpassword"
-            }
-
-            password = {
-                
-            }
-        }
-
         log = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 sku = "PerGB2018"
                 retention_in_days = 30
@@ -187,9 +181,12 @@ variable "resource" {
 
         diag = {
             main = {
+                kv = "main"
+                log = "main"
+
                 name = "haunui - Envoie des logs"
                 
-                log = [{
+                logs = [{
                     category = "AuditEvent"
                     enabled = false
 
@@ -218,6 +215,8 @@ variable "resource" {
 
         vnet = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 address = "10.0.0.0/16"
 
@@ -228,8 +227,40 @@ variable "resource" {
             }
         }
 
+        subnet = {
+            main01 = {
+                rg = "main"
+                vnet = "main"
+
+                address_prefixes = [
+                    "10.0.1.0/24",
+                ]
+
+                enforce_private_link_endpoint_network_policies = true
+                enforce_private_link_service_network_policies = true
+                service_endpoints = ["Microsoft.KeyVault","Microsoft.Storage"]
+            }
+
+            main02 = {
+                rg = "main"
+                vnet = "main"
+
+                address_prefixes = [
+                    "10.0.2.0/24"
+                ]
+
+                enforce_private_link_endpoint_network_policies = true
+                enforce_private_link_service_network_policies = true
+                service_endpoints = ["Microsoft.KeyVault","Microsoft.Storage"]
+            }
+        }
+
         netadapter = {
             main = {
+                rg = "main"
+                subnet = "main01"
+                kv = "main"
+                
                 name = "haunui"
 
                 private_service_connection = {
@@ -241,13 +272,30 @@ variable "resource" {
 
         netint = {
             main = {
+                rg = "main"
+                subnet = "main01"
+
                 name = "haunui"
                 private_ip_address_allocation = "Dynamic"
             }
         }
 
+        pub_ip = {
+            # main = {
+            #     rg = "main"
+
+            #     name = "haunui"
+            #     allocation_method = "Static"
+
+            #     tags = { environment = "Production" }
+            # }
+        }
+
         vm = {
             main = {
+                rg = "main"
+                netint = "main"
+
                 name = "haunui"
                 vm_size = "Standard_B1ls"
 
@@ -271,6 +319,14 @@ variable "resource" {
                     computer_name = "vm1"
                     admin_username = "MyNameIsAdmin"
                     admin_password = "P@ssW0rd123!"
+                }
+
+                os_profile_linux_config = {
+                    disable_password_authentication = false
+                }
+
+                tags = {
+                    environment = "staging"
                 }
             }
         }

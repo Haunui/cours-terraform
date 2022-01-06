@@ -161,16 +161,220 @@ resource "azurerm_mssql_server" "mssql0" {
 ## MSSQL DATABASE ##
 ####################
 
-resource "azurerm_mssql_database" "mssqldb0" {
-  for_each                        = var.resource.mssqldb
-  name                            = "${var.prefix.mssqldb}${each.value.name}"
-  server_id                       = azurerm_mssql_server.mssql0["${each.value.mssql}"].id
+# resource "azurerm_mssql_database" "mssqldb0" {
+#   for_each                        = var.resource.mssqldb
+#   name                            = "${var.prefix.mssqldb}${each.value.name}"
+#   server_id                       = azurerm_mssql_server.mssql0["${each.value.mssql}"].id
 
-  auto_pause_delay_in_minutes     = each.value.auto_pause_delay_in_minutes
-  max_size_gb                     = each.value.max_size_gb
-  min_capacity                    = each.value.min_capacity
-  read_replica_count              = each.value.read_replica_count
-  read_scale                      = each.value.read_scale
-  sku_name                        = "${each.value.sku_name}"
-  zone_redundant                  = each.value.zone_redundant
+#   auto_pause_delay_in_minutes     = each.value.auto_pause_delay_in_minutes
+#   max_size_gb                     = each.value.max_size_gb
+#   min_capacity                    = each.value.min_capacity
+#   read_replica_count              = each.value.read_replica_count
+#   read_scale                      = each.value.read_scale
+#   sku_name                        = "${each.value.sku_name}"
+#   zone_redundant                  = each.value.zone_redundant
+# }
+
+
+
+##############################################
+## STORE MSSQL SERVER PASSWORD IN KEY VAULT ##
+##############################################
+
+resource "azurerm_key_vault_secret" "mssqlsecret0" {
+  for_each     = var.resource.mssql
+
+  name         = "${var.prefix.mssql}${each.value.name}adminpassword"
+  value        = random_password.randpass0["${each.value.random_password}"].result
+  key_vault_id = azurerm_key_vault.kv0["${each.value.kv}"].id
+}
+
+
+
+#############################
+## LOG ANALYTICS WORKSPACE ##
+#############################
+
+resource "azurerm_log_analytics_workspace" "log0" {
+  for_each            = var.resource.log
+  name                = "${var.prefix.log}${each.value.name}"
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  location            = azurerm_resource_group.rg0["${each.value.rg}"].location
+  sku                 = "${each.value.sku}"
+  retention_in_days   = each.value.retention_in_days
+}
+
+
+
+################################
+## MONITOR DIAGNOSTIC SETTING ##
+################################
+
+resource "azurerm_monitor_diagnostic_setting" "diag0" {
+  for_each                   = var.resource.diag
+
+  name                       = "${var.prefix.diag}${each.value.name}"
+  target_resource_id         = azurerm_key_vault.kv0["${each.value.kv}"].id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log0["${each.value.log}"].id
+
+  log {
+    category = "${each.value.logs[0].category}"
+    enabled  = each.value.logs[0].enabled
+
+    retention_policy {
+      enabled = each.value.logs[0].retention_policy.enabled
+    }
+  }
+
+  log {
+    category = "${each.value.logs[1].category}"
+    enabled  = each.value.logs[1].enabled
+
+    retention_policy {
+      enabled = each.value.logs[1].retention_policy.enabled
+    }
+  }
+
+  metric {
+    category = "${each.value.metric.category}"
+
+    retention_policy {
+      enabled = each.value.metric.retention_policy.enabled
+    }
+  }
+}
+
+
+
+#####################
+## VIRTUAL NETWORK ##
+#####################
+
+resource "azurerm_virtual_network" "vnet0" {
+  for_each            = var.resource.vnet
+
+  name                = "${var.prefix.vnet}${each.value.name}"
+  address_space       = ["${each.value.address}"]
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  location            = azurerm_resource_group.rg0["${each.value.rg}"].location
+}
+
+
+
+#################
+## SUB NETWORK ##
+#################
+
+resource "azurerm_subnet" "subnet0" {
+  for_each             = var.resource.subnet
+
+  name                 = "${var.prefix.subnet}${each.key}"
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  virtual_network_name = azurerm_virtual_network.vnet0["${each.value.vnet}"].name
+  address_prefixes     = each.value.address_prefixes
+
+  enforce_private_link_endpoint_network_policies  = each.value.enforce_private_link_endpoint_network_policies
+  enforce_private_link_service_network_policies   = each.value.enforce_private_link_service_network_policies
+  service_endpoints                               = each.value.service_endpoints
+}
+
+
+
+##############
+## ENDPOINT ##
+##############
+
+resource "azurerm_private_endpoint" "netadapter0" {
+  for_each            = var.resource.netadapter
+
+  name                = "${var.prefix.netadapter}${each.value.name}"
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  location            = azurerm_resource_group.rg0["${each.value.rg}"].location
+  subnet_id           = azurerm_subnet.subnet0["${each.value.subnet}"].id
+
+  private_service_connection {
+    name                            = "${var.prefix.netadapter}${each.value.name}conn"
+    private_connection_resource_id  = azurerm_key_vault.kv0["${each.value.kv}"].id
+    subresource_names               = each.value.private_service_connection.subresource_names
+    is_manual_connection            = each.value.private_service_connection.is_manual_connection
+  } 
+}
+
+
+
+#######################
+## NETWORK INTERFACE ##
+#######################
+
+resource "azurerm_network_interface" "netint0" {
+  for_each                        = var.resource.netint
+  name                            = "${var.prefix.netint}${each.value.name}"
+  resource_group_name             = azurerm_resource_group.rg0["${each.value.rg}"].name
+  location                        = azurerm_resource_group.rg0["${each.value.rg}"].location
+
+  ip_configuration {
+    name                          = "${var.prefix.netint}${each.value.name}conf0"
+    subnet_id                     = azurerm_subnet.subnet0["${each.value.subnet}"].id
+    private_ip_address_allocation = "${each.value.private_ip_address_allocation}"
+    #public_ip_address_id          = azurerm_public_ip.ipmain.id
+  }
+}
+
+
+
+################
+## PUBLIC IPs ##
+################
+
+resource "azurerm_public_ip" "pub_ip0" {
+  for_each            = var.resource.pub_ip
+
+  name                = "${var.prefix.pub_ip}${each.value.name}"
+  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+  location            = azurerm_resource_group.rg0["${each.value.rg}"].location
+  allocation_method   = "${each.value.allocation_method}"
+
+  tags                = each.value.tags
+}
+
+
+
+########
+## VM ##
+########
+
+resource "azurerm_virtual_machine" "vm0" {
+  for_each              = var.resource.vm
+
+  name                  = "${var.prefix.vm}${each.value.name}"
+  resource_group_name   = azurerm_resource_group.rg0["${each.value.rg}"].name
+  location              = azurerm_resource_group.rg0["${each.value.rg}"].location
+  network_interface_ids = [azurerm_network_interface.netint0["${each.value.netint}"].id]
+  vm_size               = "${each.value.vm_size}"
+
+  storage_image_reference {
+    publisher           = "${each.value.image.publisher}"
+    offer               = "${each.value.image.offer}"
+    sku                 = "${each.value.image.sku}"
+    version             = "${each.value.image.version}"
+  }
+
+  storage_os_disk {
+    name                = "${each.value.disk[0].name}"
+    caching             = "${each.value.disk[0].caching}"
+    create_option       = "${each.value.disk[0].create_option}"
+    managed_disk_type   = "${each.value.disk[0].managed_disk_type}"
+  }
+
+  os_profile {
+    computer_name       = "${each.value.os_profile.computer_name}"
+    admin_username      = "${each.value.os_profile.admin_username}"
+    admin_password      = "${each.value.os_profile.admin_password}"
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = "${each.value.os_profile_linux_config.disable_password_authentication}"
+  }
+
+  tags = each.value.tags
 }
