@@ -329,7 +329,7 @@ resource "azurerm_network_interface" "netintmain" {
     name                          = "${var.prefix.netint}${var.resource.netint.main.name}conf0"
     subnet_id                     = azurerm_subnet.subnet0X["01"].id
     private_ip_address_allocation = "Static"
-    public_ip_address_id          = azurerm_public_ip.ipmain.id
+    #public_ip_address_id          = azurerm_public_ip.ipmain.id
   }
 }
 
@@ -376,13 +376,13 @@ resource "azurerm_virtual_machine" "vmmain" {
 }
 
 
-resource "azurerm_public_ip" "ipmain" {
-  name = "iphaunui"
-  resource_group_name = azurerm_resource_group.rgmain.name
-  location = azurerm_resource_group.rgmain.location
-  allocation_method = "Static"
+# resource "azurerm_public_ip" "ipmain" {
+#   name = "iphaunui"
+#   resource_group_name = azurerm_resource_group.rgmain.name
+#   location = azurerm_resource_group.rgmain.location
+#   allocation_method = "Static"
 
-  tags = {
-    environment = "Production"
-  }
-}
+#   tags = {
+#     environment = "Production"
+#   }
+# }
