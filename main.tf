@@ -385,7 +385,7 @@ resource "azurerm_virtual_machine" "vm0" {
 ## MONITOR ACTION GROUP ##
 ##########################
 
-resource "azurerm_monitor_action_group" "monitorag0" {
+resource "azurerm_monitor_action_group" "actiongroup0" {
   for_each            = var.resource.monitor_action_group
 
   name                = "${var.prefix.monitor_action_group}${each.value.name}${each.key}"
@@ -426,6 +426,6 @@ resource "azurerm_monitor_metric_alert" "alert" {
   }
 
   action {
-    action_group_id = azurerm_monitor_action_group.monitorag0["${each.value.action_group}"].id
+    action_group_id = azurerm_monitor_action_group.actiongroup0["${each.value.action_group}"].id
   }
 }
