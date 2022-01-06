@@ -15,17 +15,24 @@ variable "prefix" {
         netadapter = "netadapter"
         vm = "vm"
         netint = "netint"
+        pub_ip = "ip"
     }
 }
 
 
 # DATA
 variable "data" {
-    type = map
+    type = any
     default = {
-        raphael = {
-            name = "storageraphael"
-            resource_group_name = "rg-raphael"
+        rg = {
+
+        }
+        
+        st = {
+            raphael = {
+                name = "storageraphael"
+                resource_group_name = "rg-raphael"
+            }
         }
     }
 }
@@ -36,7 +43,7 @@ variable "resource" {
     type = any
     default = {
         rg = {
-            main = {
+            "main" = {
                 name = "haunui"
                 location = "West Europe"
             }
@@ -46,33 +53,50 @@ variable "resource" {
         storage = {
             main = {
                 name = "haunui"
+                rg = "main"
                 account_tier = "Standard"
                 account_replication_type = "LRS"
-                access_tier =  "Cool"
-
-                network_acls = {
-                    bypass = ["AzureServices"]
-                    default_action = "Deny"
-                    ip_rules = ["78.118.201.29"]
-                }
+                access_tier = "Cool"
             }
-            
+
             mssql = {
                 name = "haunuimssql"
+                rg = "main"
                 account_tier = "Standard"
                 account_replication_type = "LRS"
                 access_tier = "Cool"
             }
         }
 
+        storage_network_rules = {
+            main = {
+                rg = "main"
+                st = "main"
+                bypass = ["AzureServices"]
+                default_action = "Deny"
+                ip_rules = ["78.118.201.29"]
+                virtual_network_subnet_ids = []
+            }
+        }
+
 
         container = {
             main = {
+                st = {
+                    type = "resource"
+                    value = "main"
+                }
+
                 name = "haunui"
                 container_access_type = "private"
             }
 
             raphael = {
+                st = {
+                    type = "data"
+                    value = "raphael"
+                }
+
                 name = "raphael"
                 container_access_type = "private"
             }
@@ -80,6 +104,8 @@ variable "resource" {
 
         keyvault = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 enabled_for_disk_encryption = true
                 soft_delete_retention_days  = 7
@@ -96,15 +122,32 @@ variable "resource" {
                     bypass = "AzureServices"
                     default_action = "Deny"
                     ip_rules = ["78.118.201.29"]
+                    virtual_network_subnet_ids = []
                 }
+            }
+        }
+
+        random_password = {
+            mssql = {
+                length = 20
+                special = true
+                override_special = "_%@"
+                min_lower = 1
+                min_numeric = 1
+                min_special = 1
+                min_upper = 1
             }
         }
 
         mssql = {
             main = {
+                rg = "main"
+                kv = "main"
+
                 name = "haunui"
                 version = "12.0"
                 administrator_login = "HaunuiSS"
+                random_password = "mssql"
                 minimum_tls_version = "1.2"
 
                 tags = { environment = "production" }
@@ -113,6 +156,8 @@ variable "resource" {
 
         mssqldb = {
             main = {
+                mssql = "main"
+
                 name = "haunui"
                 auto_pause_delay_in_minutes = 120
                 max_size_gb = 1
@@ -124,24 +169,10 @@ variable "resource" {
             }
         }
 
-        mssqladmin = {
-            secret = {
-                name = "mssqladminpassword"
-            }
-
-            password = {
-                length = 20
-                special = true
-                override_special = "_%@"
-                min_lower = 1
-                min_numeric = 1
-                min_special = 1
-                min_upper = 1
-            }
-        }
-
         log = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 sku = "PerGB2018"
                 retention_in_days = 30
@@ -150,9 +181,12 @@ variable "resource" {
 
         diag = {
             main = {
+                kv = "main"
+                log = "main"
+
                 name = "haunui - Envoie des logs"
                 
-                log = [{
+                logs = [{
                     category = "AuditEvent"
                     enabled = false
 
@@ -181,6 +215,8 @@ variable "resource" {
 
         vnet = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 address = "10.0.0.0/16"
 
@@ -191,8 +227,40 @@ variable "resource" {
             }
         }
 
+        subnet = {
+            main01 = {
+                rg = "main"
+                vnet = "main"
+
+                address_prefixes = [
+                    "10.0.1.0/24",
+                ]
+
+                enforce_private_link_endpoint_network_policies = true
+                enforce_private_link_service_network_policies = true
+                service_endpoints = ["Microsoft.KeyVault","Microsoft.Storage"]
+            }
+
+            main02 = {
+                rg = "main"
+                vnet = "main"
+
+                address_prefixes = [
+                    "10.0.2.0/24"
+                ]
+
+                enforce_private_link_endpoint_network_policies = true
+                enforce_private_link_service_network_policies = true
+                service_endpoints = ["Microsoft.KeyVault","Microsoft.Storage"]
+            }
+        }
+
         netadapter = {
             main = {
+                rg = "main"
+                subnet = "main01"
+                kv = "main"
+                
                 name = "haunui"
 
                 private_service_connection = {
@@ -204,13 +272,30 @@ variable "resource" {
 
         netint = {
             main = {
+                rg = "main"
+                subnet = "main01"
+
                 name = "haunui"
                 private_ip_address_allocation = "Dynamic"
             }
         }
 
+        pub_ip = {
+            # main = {
+            #     rg = "main"
+
+            #     name = "haunui"
+            #     allocation_method = "Static"
+
+            #     tags = { environment = "Production" }
+            # }
+        }
+
         vm = {
             main = {
+                rg = "main"
+                netint = "main"
+
                 name = "haunui"
                 vm_size = "Standard_B1ls"
 
@@ -234,6 +319,14 @@ variable "resource" {
                     computer_name = "vm1"
                     admin_username = "MyNameIsAdmin"
                     admin_password = "P@ssW0rd123!"
+                }
+
+                os_profile_linux_config = {
+                    disable_password_authentication = false
+                }
+
+                tags = {
+                    environment = "staging"
                 }
             }
         }
