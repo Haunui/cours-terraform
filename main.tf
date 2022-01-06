@@ -326,16 +326,16 @@ resource "azurerm_network_interface" "netint0" {
 ## PUBLIC IPs ##
 ################
 
-resource "azurerm_public_ip" "pub_ip0" {
-  for_each            = var.resource.pub_ip
+# resource "azurerm_public_ip" "pub_ip0" {
+#   for_each            = var.resource.pub_ip
 
-  name                = "${var.prefix.pub_ip}${each.value.name}"
-  resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
-  location            = azurerm_resource_group.rg0["${each.value.rg}"].location
-  allocation_method   = "${each.value.allocation_method}"
+#   name                = "${var.prefix.pub_ip}${each.value.name}"
+#   resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
+#   location            = azurerm_resource_group.rg0["${each.value.rg}"].location
+#   allocation_method   = "${each.value.allocation_method}"
 
-  tags                = each.value.tags
-}
+#   tags                = each.value.tags
+# }
 
 
 
