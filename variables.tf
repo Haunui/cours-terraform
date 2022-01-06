@@ -21,11 +21,17 @@ variable "prefix" {
 
 # DATA
 variable "data" {
-    type = map
+    type = any
     default = {
-        raphael = {
-            name = "storageraphael"
-            resource_group_name = "rg-raphael"
+        rg = {
+
+        }
+        
+        st = {
+            raphael = {
+                name = "storageraphael"
+                resource_group_name = "rg-raphael"
+            }
         }
     }
 }
@@ -52,14 +58,6 @@ variable "resource" {
                 access_tier = "Cool"
             }
 
-            raphael = {
-                name = "raphael"
-                rg = "main"
-                account_tier = "Standard"
-                account_replication_type = "LRS"
-                access_tier = "Cool"
-            }
-            
             mssql = {
                 name = "haunuimssql"
                 rg = "main"
@@ -83,20 +81,30 @@ variable "resource" {
 
         container = {
             main = {
+                st = {
+                    type = "resource"
+                    value = "main"
+                }
+
                 name = "haunui"
-                st = "main"
                 container_access_type = "private"
             }
 
             raphael = {
+                st = {
+                    type = "data"
+                    value = "raphael"
+                }
+
                 name = "raphael"
-                st = "raphael"
                 container_access_type = "private"
             }
         }
 
         keyvault = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 enabled_for_disk_encryption = true
                 soft_delete_retention_days  = 7
@@ -113,15 +121,31 @@ variable "resource" {
                     bypass = "AzureServices"
                     default_action = "Deny"
                     ip_rules = ["78.118.201.29"]
+                    virtual_network_subnet_ids = []
                 }
+            }
+        }
+
+        random_password = {
+            mssql = {
+                length = 20
+                special = true
+                override_special = "_%@"
+                min_lower = 1
+                min_numeric = 1
+                min_special = 1
+                min_upper = 1
             }
         }
 
         mssql = {
             main = {
+                rg = "main"
+
                 name = "haunui"
                 version = "12.0"
                 administrator_login = "HaunuiSS"
+                random_password = "mssql"
                 minimum_tls_version = "1.2"
 
                 tags = { environment = "production" }
@@ -130,6 +154,8 @@ variable "resource" {
 
         mssqldb = {
             main = {
+                mssql = "main"
+
                 name = "haunui"
                 auto_pause_delay_in_minutes = 120
                 max_size_gb = 1
@@ -147,13 +173,7 @@ variable "resource" {
             }
 
             password = {
-                length = 20
-                special = true
-                override_special = "_%@"
-                min_lower = 1
-                min_numeric = 1
-                min_special = 1
-                min_upper = 1
+                
             }
         }
 

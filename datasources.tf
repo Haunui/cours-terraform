@@ -2,8 +2,18 @@
 data "azurerm_client_config" "current" {}
 
 
-# RAPHAEL'S STORAGE
-data "azurerm_storage_account" "straphael" {
-  name = "${var.data.raphael.name}"
-  resource_group_name = "${var.data.raphael.resource_group_name}"
+# DATASOURCE RESOURCE GROUP
+data "azurerm_storage_account" "rg0" {
+  for_each = var.data.rg
+
+  name = "${each.value.name}"
+  resource_group_name = "${each.value.resource_group_name}"
+}
+
+# DATASOURCE STORAGE
+data "azurerm_storage_account" "st0" {
+  for_each = var.data.st
+
+  name = "${each.value.name}"
+  resource_group_name = "${each.value.resource_group_name}"
 }
