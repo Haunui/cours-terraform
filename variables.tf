@@ -378,6 +378,10 @@ variable "resource" {
                     {
                         name = "Haunui"
                         email_address = "haunui@saint-sevin.fr"
+                    },
+                    {
+                        name = "Axel"
+                        email_address = "axel.delmache@gmail.com"
                     }
                 ]
             }

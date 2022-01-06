@@ -392,14 +392,13 @@ resource "azurerm_monitor_action_group" "monitorag0" {
   resource_group_name = azurerm_resource_group.rg0["${each.value.rg}"].name
   short_name          = "${each.value.short_name}"
 
-  email_receiver {
-    name          = "${each.value.email_receiver[0].name}"
-    email_address = "${each.value.email_receiver[0].email_address}"
-  }
+  dynamic "email_receiver" {
+    for_each = toset(each.value.email_receiver)
 
-  email_receiver {
-    name          = "${each.value.email_receiver[1].name}"
-    email_address = "${each.value.email_receiver[1].email_address}"
+    content {
+      name          = "${email_receiver.value.name}"
+      email_address = "${email_receiver.value.email_address}"
+    }
   }
 }
 
