@@ -36,7 +36,7 @@ variable "resource" {
     type = any
     default = {
         rg = {
-            main = {
+            "main" = {
                 name = "haunui"
                 location = "West Europe"
             }
@@ -46,22 +46,37 @@ variable "resource" {
         storage = {
             main = {
                 name = "haunui"
+                rg = "main"
                 account_tier = "Standard"
                 account_replication_type = "LRS"
-                access_tier =  "Cool"
+                access_tier = "Cool"
+            }
 
-                network_acls = {
-                    bypass = ["AzureServices"]
-                    default_action = "Deny"
-                    ip_rules = ["78.118.201.29"]
-                }
+            raphael = {
+                name = "raphael"
+                rg = "main"
+                account_tier = "Standard"
+                account_replication_type = "LRS"
+                access_tier = "Cool"
             }
             
             mssql = {
                 name = "haunuimssql"
+                rg = "main"
                 account_tier = "Standard"
                 account_replication_type = "LRS"
                 access_tier = "Cool"
+            }
+        }
+
+        storage_network_rules = {
+            main = {
+                rg = "main"
+                st = "main"
+                bypass = ["AzureServices"]
+                default_action = "Deny"
+                ip_rules = ["78.118.201.29"]
+                virtual_network_subnet_ids = []
             }
         }
 
@@ -69,11 +84,13 @@ variable "resource" {
         container = {
             main = {
                 name = "haunui"
+                st = "main"
                 container_access_type = "private"
             }
 
             raphael = {
                 name = "raphael"
+                st = "raphael"
                 container_access_type = "private"
             }
         }
