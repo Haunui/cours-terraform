@@ -313,3 +313,63 @@ resource "azurerm_private_endpoint" "netadaptermain" {
     is_manual_connection            = var.resource.netadapter.main.private_service_connection.is_manual_connection
   } 
 }
+
+
+
+#######################
+## NETWORK INTERFACE ##
+#######################
+
+resource "azurerm_network_interface" "netintmain" {
+  name                            = "${var.prefix.netint}${var.resource.netint.main.name}"
+  location                        = azurerm_resource_group.rgmain.location
+  resource_group_name             = azurerm_resource_group.rgmain.name
+
+  ip_configuration {
+    name                          = "${var.prefix.netint}${var.resource.netint.main.name}conf0"
+    subnet_id                     = azurerm_subnet.subnet0X["01"].id
+    private_ip_address_allocation = "Static"
+  }
+}
+
+
+
+########
+## VM ##
+########
+
+resource "azurerm_virtual_machine" "vmmain" {
+  name                  = "${var.prefix.vm}${var.resource.vm.main.name}"
+  location              = azurerm_resource_group.rgmain.location
+  resource_group_name   = azurerm_resource_group.rgmain.name
+  network_interface_ids = [azurerm_network_interface.netintmain.id]
+  vm_size               = "${var.resource.vm.main.vm_size}"
+
+  storage_image_reference {
+    publisher           = "${var.resource.vm.main.image.publisher}"
+    offer               = "${var.resource.vm.main.image.offer}"
+    sku                 = "${var.resource.vm.main.image.sku}"
+    version             = "${var.resource.vm.main.image.version}"
+  }
+
+  storage_os_disk {
+    name                = "${var.resource.vm.main.disk[0].name}"
+    caching             = "${var.resource.vm.main.disk[0].caching}"
+    create_option       = "${var.resource.vm.main.disk[0].create_option}"
+    managed_disk_type   = "${var.resource.vm.main.disk[0].managed_disk_type}"
+  }
+
+  os_profile {
+    computer_name       = "${var.resource.vm.main.os_profile.computer_name}"
+    admin_username      = "${var.resource.vm.main.os_profile.admin_username}"
+    admin_password      = "${var.resource.vm.main.os_profile.admin_password}"
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
+  tags = {
+    environment       = "staging"
+  }
+}

@@ -13,6 +13,8 @@ variable "prefix" {
         vnet = "vnet"
         subnet = "subnet"
         netadapter = "netadapter"
+        vm = "vm"
+        netint = "netint"
     }
 }
 
@@ -200,6 +202,40 @@ variable "resource" {
             }
         }
 
+        netint = {
+            main = {
+                name = "haunui"
+                private_ip_address_allocation = "Dynamic"
+            }
+        }
 
+        vm = {
+            main = {
+                name = "haunui"
+                vm_size = "Standard_B1ls"
+
+                image = {
+                    publisher = "Canonical"
+                    offer = "UbuntuServer"
+                    sku = "18.04-LTS"
+                    version = "latest"
+                }
+
+                disk = [
+                    {
+                        name = "disk0"
+                        caching = "ReadWrite"
+                        create_option = "FromImage"
+                        managed_disk_type = "Standard_LRS"
+                    }
+                ]
+
+                os_profile = {
+                    computer_name = "vm1"
+                    admin_username = "MyNameIsAdmin"
+                    admin_password = "P@ssW0rd123!"
+                }
+            }
+        }
     }
 }
