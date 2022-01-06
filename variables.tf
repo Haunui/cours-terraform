@@ -344,14 +344,12 @@ variable "resource" {
                     version = "latest"
                 }
 
-                disk = [
-                    {
-                        name = "disk0"
-                        caching = "ReadWrite"
-                        create_option = "FromImage"
-                        managed_disk_type = "Standard_LRS"
-                    }
-                ]
+                os_disk = {
+                    name = "disk0"
+                    caching = "ReadWrite"
+                    create_option = "FromImage"
+                    managed_disk_type = "Standard_LRS"
+                }
 
                 os_profile = {
                     computer_name = "vm1"

@@ -360,10 +360,10 @@ resource "azurerm_virtual_machine" "vm0" {
   }
 
   storage_os_disk {
-    name                = "${each.value.disk[0].name}"
-    caching             = "${each.value.disk[0].caching}"
-    create_option       = "${each.value.disk[0].create_option}"
-    managed_disk_type   = "${each.value.disk[0].managed_disk_type}"
+    name                = "${each.value.os_disk.name}"
+    caching             = "${each.value.os_disk.caching}"
+    create_option       = "${each.value.os_disk.create_option}"
+    managed_disk_type   = "${each.value.os_disk.managed_disk_type}"
   }
 
   os_profile {
